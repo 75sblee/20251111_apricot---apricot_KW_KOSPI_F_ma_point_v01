@@ -1,15 +1,16 @@
-import admin.a_main
 
-from func.var_global import *
+from func.var import Var as v
 
 
 class CheJan:
-    def __init__(self):
-        self.a = admin.a_main.AMain()
+    def __init__(self, a):
+        self.a = a
+        self.lib = a.lib
+        self.log = a.log
         self.kiwoom = self.a.kiwoom
 
         self.kiwoom.OnReceiveChejanData.connect(self.chejan_slot)
-        log.info(f'체잔 클라스 실행')
+        self.log.info(f'체잔 클라스 실행')
 
     def chejan_slot(self, s_gubun):
         code = self.kiwoom.dynamicCall("GetChejanData(int)", 9001).strip()
@@ -24,13 +25,13 @@ class CheJan:
         micheCnt = self.kiwoom.dynamicCall("GetChejanData(int)", 902)
         order_price = self.kiwoom.dynamicCall("GetChejanData(int)", 901)
 
-        value = lib.encoding(idx=value)
-        tr_type = lib.encoding(idx=tr_type)
+        value = self.lib.encoding(idx=value)
+        tr_type = self.lib.encoding(idx=tr_type)
 
         # log.info(f'acc : {account}')
 
-        if account == var.acc:
-            loger = log.debug
+        if account == v.acc:
+            loger = self.log.debug
             # 로그 정보
             loger(f"")
             loger(f"───────────────────")
@@ -48,15 +49,15 @@ class CheJan:
             loger(f"───────────────────")
             loger(f"")
 
-            if var.tr_sta:
+            if v.tr_sta:
                 if s_gubun == "0" and value == "체결":
 
                     # 체결가 반영
                     price_get_sgn = False
-                    if var.medosu_gubun == "mesu":
+                    if v.medosu_gubun == "mesu":
                         if tr_Gubun == "2":
                             price_get_sgn = True
-                    elif var.medosu_gubun == "medo":
+                    elif v.medosu_gubun == "medo":
                         if tr_Gubun == "1":
                             price_get_sgn = True
 
@@ -66,24 +67,24 @@ class CheJan:
                     micheCnt = int(micheCnt)
 
                     if price_get_sgn and micheCnt == 0:
-                        var.price_get = float(tr_price)
-                        log.info(f'📕 체결가 : {var.price_get}')
+                        v.price_get = float(tr_price)
+                        self.log.info(f'📕 체결가 : {v.price_get}')
                         self.a.ui.table_tr(gubun="set", value=None)
 
-                    if var.sgn_medosu and micheCnt == 0:
-                        var.sgn_medosu = False
-                        log.info(f'청산 확인 후 주문')
-                        self.a.order(code=var.code, medosu_gubun=var.medosu_gubun, vol=var.vol_base)
+                    if v.sgn_medosu and micheCnt == 0:
+                        v.sgn_medosu = False
+                        self.log.info(f'청산 확인 후 주문')
+                        self.a.order(code=v.code, medosu_gubun=v.medosu_gubun, vol=v.vol_base)
 
             else:
                 if s_gubun == "0" and value == "체결":
 
                     # 체결가 반영
                     price_get_sgn = False
-                    if var.medosu_gubun_1 == "mesu":
+                    if v.medosu_gubun_1 == "mesu":
                         if tr_Gubun == "2":
                             price_get_sgn = True
-                    elif var.medosu_gubun_1 == "medo":
+                    elif v.medosu_gubun_1 == "medo":
                         if tr_Gubun == "1":
                             price_get_sgn = True
 
@@ -93,11 +94,11 @@ class CheJan:
                     micheCnt = int(micheCnt)
 
                     if price_get_sgn and micheCnt == 0:
-                        var.price_get_1 = float(tr_price)
-                        log.info(f'📕 체결가 : {var.price_get_1}')
+                        v.price_get_1 = float(tr_price)
+                        self.log.info(f'📕 체결가 : {v.price_get_1}')
                         self.a.ui.table_tr_1(gubun="set", value=None)
 
-                    if var.sgn_medosu and micheCnt == 0:
-                        var.sgn_medosu = False
-                        log.info(f'청산 확인 후 주문')
-                        self.a.order(code=var.code_1, medosu_gubun=var.medosu_gubun_1, vol=var.vol_base_1)
+                    if v.sgn_medosu and micheCnt == 0:
+                        v.sgn_medosu = False
+                        self.log.info(f'청산 확인 후 주문')
+                        self.a.order(code=v.code_1, medosu_gubun=v.medosu_gubun_1, vol=v.vol_base_1)

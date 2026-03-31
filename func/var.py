@@ -7,6 +7,7 @@
 
 
 import socket
+import pandas as pd
 
 
 class Var:
@@ -78,6 +79,10 @@ class Var:
     clear_cnt = 0       # 청산회수
     clear_info = {}     # target_tick / vol
     buy_cdt = False     # 조건진입 체크 상태
+
+    clear_cnt_base_1 = 0  # 청산회수 설정
+    clear_cnt_1 = 0       # 청산회수
+    clear_info_1 = {}     # target_tick / vol
 
     entry_line_name = None  # 진입 기준라인 저장 (스위칭용)
     entry_line_value = None

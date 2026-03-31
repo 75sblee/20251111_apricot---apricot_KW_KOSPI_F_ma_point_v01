@@ -10,12 +10,13 @@ from datetime import datetime
 
 
 class UiMain(QMainWindow):
-    def __init__(self, lib, db_admin, log):
+    def __init__(self, a, lib, db_admin, log):
         # noinspection PyArgumentList
         super().__init__()
         ui_path = "ui/qt/main.ui"
         uic.loadUi(ui_path, self)
 
+        self.a = a
         self.lib = lib
         self.db_admin = db_admin
         self.log = log
@@ -58,8 +59,10 @@ class UiMain(QMainWindow):
 
         # 청산회수
         self.clear_cnt_cb.currentTextChanged.connect(self.clear_cnt_cb_clicked)
+        self.clear_cnt_cb_1.currentTextChanged.connect(self.clear_cnt_cb_1_clicked)
         # 청산테이블변경
         self.clear_table_tw.cellChanged.connect(self.clear_table_on_cell_changed)
+        self.clear_table_tw_1.cellChanged.connect(self.clear_table_1_on_cell_changed)
 
     def start_pb_clicked(self):
         self.lib.w_sound(hz=200, time_ss=80, cnt=1)
@@ -73,6 +76,7 @@ class UiMain(QMainWindow):
             v.tp_done = True
         if code != "" and vol_base != "" and min_base != "" and ma != "":
             if not v.tr_sta:
+                # noinspection PyTypeChecker
                 v.df = None  # 초기화
                 v.code = code
                 v.vol_base = int(vol_base)
@@ -217,6 +221,7 @@ class UiMain(QMainWindow):
         if (code != "" and vol_base != "" and min_base != "" and period != "" and line_base != ""
                 and line_1 != "" and line_rpt != ""):
             if not v.tr_sta_1:
+                # noinspection PyTypeChecker
                 v.df = None  # 초기화
                 v.code_1 = code
                 v.vol_base_1 = int(vol_base)
@@ -271,6 +276,17 @@ class UiMain(QMainWindow):
                 self.log.info(idx)
                 self.log_ui_1(text=idx)
 
+                self.log.info(f'clear_info : {v.clear_info}')
+
+                if v.clear_info_1:
+                    clear_cnt_sum = 0
+                    for i in v.clear_info_1:
+                        vol = v.clear_info_1[i]["vol"]
+                        clear_cnt_sum += vol
+                    if clear_cnt_sum > v.vol_base_1 - 1:
+                        msg_box(f'분할 청산 개수 확인 하세요')
+                        return
+
                 v.tr_sta_1 = True
                 idx = "✅ 매매시작"
                 self.log.info(idx)
@@ -299,8 +315,16 @@ class UiMain(QMainWindow):
                 self.switching_pb.setDisabled(True)
                 self.clear_pb.setDisabled(True)
 
+                self.clear_cnt_cb_1.setDisabled(True)
                 self.tp_le_2.setDisabled(True)
                 self.checkBox_2.setDisabled(True)
+
+                self.buy_cdt_ckb.setDisabled(True)
+
+                self.clear_cnt_cb.setDisabled(True)
+                self.clear_table_tw.setDisabled(True)
+                self.tp_le.setDisabled(True)
+                self.checkBox.setDisabled(True)
 
                 self.a.pgr_run(1)
             else:
@@ -328,8 +352,16 @@ class UiMain(QMainWindow):
                 self.switching_pb.setDisabled(False)
                 self.clear_pb.setDisabled(False)
 
+                self.clear_cnt_cb_1.setDisabled(False)
                 self.tp_le_2.setDisabled(False)
                 self.checkBox_2.setDisabled(False)
+
+                self.buy_cdt_ckb.setDisabled(False)
+
+                self.clear_cnt_cb.setDisabled(False)
+                self.clear_table_tw.setDisabled(False)
+                self.tp_le.setDisabled(False)
+                self.checkBox.setDisabled(False)
 
                 if v.vol_get_1 == 0:
                     self.code_cb_1.setDisabled(False)
@@ -608,7 +640,7 @@ class UiMain(QMainWindow):
                 self.log.info(idx)
                 self.log_ui_1(text=idx)
 
-    # 청산회수
+    # 청산회수 이평매매
     def clear_cnt_cb_clicked(self, text):
         # <<< 시그널 막기 시작
         self.clear_table_tw.blockSignals(True)
@@ -637,7 +669,36 @@ class UiMain(QMainWindow):
         # <<< 시그널 다시 켜기
         self.clear_table_tw.blockSignals(False)
 
-    # 청산테이블변경
+    # 청산회수 기준선매매
+    def clear_cnt_cb_1_clicked(self, text):
+        # <<< 시그널 막기 시작
+        self.clear_table_tw_1.blockSignals(True)
+
+        self.lib.w_sound(hz=200, time_ss=80, cnt=1)
+        self.clear_table_tw_1.setRowCount(0)
+        v.clear_cnt_base_1 = 0  # 초기화
+        v.clear_info_1 = {}
+        if text != "":
+            row = int(text)
+            v.clear_cnt_base_1 = row
+
+            self.clear_table_tw_1.setRowCount(row)
+
+            for i in range(row):
+                cnt = i + 1
+                self.clear_table_tw_1.setItem(i, 0, QTableWidgetItem(f"{cnt}차"))
+                self.clear_table_tw_1.item(i, 0).setTextAlignment(Qt.AlignCenter | Qt.AlignCenter)
+
+                self.clear_table_tw_1.setItem(i, 1, QTableWidgetItem(f" "))
+                self.clear_table_tw_1.item(i, 1).setTextAlignment(Qt.AlignCenter | Qt.AlignCenter)
+                self.clear_table_tw_1.setItem(i, 2, QTableWidgetItem(f" "))
+                self.clear_table_tw_1.item(i, 2).setTextAlignment(Qt.AlignCenter | Qt.AlignCenter)
+
+                v.clear_info_1.setdefault(str(cnt), {"target_tick": 0, "vol": 0})
+        # <<< 시그널 다시 켜기
+        self.clear_table_tw_1.blockSignals(False)
+
+    # 청산테이블변경 이평매매
     def clear_table_on_cell_changed(self, row, col):
         try:
             self.lib.w_sound(hz=200, time_ss=80, cnt=1)
@@ -659,7 +720,31 @@ class UiMain(QMainWindow):
         except Exception as e:
             _ = e
             msg_box("입력내용 확인 하세요")
-        self.log.info(f'clear_info : {v.clear_info}')
+        self.log.info(f'clear_info(이평매매 : {v.clear_info}')
+
+    # 청산테이블변경 기준선매매
+    def clear_table_1_on_cell_changed(self, row, col):
+        try:
+            self.lib.w_sound(hz=200, time_ss=80, cnt=1)
+            key = str(row + 1)
+            data = self.clear_table_tw_1.item(row, col).text()
+            if data == "":
+                data = 0
+            else:
+                data = int(data)
+
+            if col == 1:
+                value = "target_tick"
+            elif col == 2:
+                value = "vol"
+            else:
+                value = None
+            if value is not None:
+                v.clear_info_1[key][value] = data
+        except Exception as e:
+            _ = e
+            msg_box("입력내용 확인 하세요")
+        self.log.info(f'clear_info(기준선매매) : {v.clear_info_1}')
 
     def table_tr(self, gubun, value):
         table = self.table_tw

@@ -1,14 +1,17 @@
 
 import ui.ui_main
 import kw.logIn
-import kw.rl
-import kw.tr
-import kw.chejan
 import kw.order
 
 from admin.a_rl import RlAdmin
 from admin.a_rl_1 import RlAdmin1
+
 from ui.ui_main import UiMain
+
+from kw.rl import Rl
+from kw.tr import Tr
+from kw.chejan import CheJan
+
 from func.var import Var as v
 from func.lib import Lib
 from func.db_admin import DbAdmin
@@ -48,10 +51,10 @@ class AMain:
         self.kiwoom = QAxWidget("KHOPENAPI.KHOpenAPICtrl.1")
         self.kiwoom.OnReceiveMsg.connect(self.msg_slot)
         self.event_loop = QEventLoop()
-        self.ui = UiMain()
+        self.ui = UiMain(self, self.lib, self.db_admin, self.log)
 
-        self._rl_admin = RlAdmin()
-        self._rl_admin_1 = RlAdmin1()
+        self._rl_admin = RlAdmin(self)
+        self._rl_admin_1 = RlAdmin1(self)
 
         self._bar_cnt = 0
         self._bar_cnr_rl = 0
@@ -60,11 +63,12 @@ class AMain:
 
         self.timer_1 = QTimer()
 
-        self.rl = None
-        self.tr = None
-        self.chejan = None
-        self._rl_admin = None
-        self._rl_admin_1 = None
+        self.rl = Rl(self.kiwoom)
+        self.rl.data_signal.connect(self.on_real_data)
+        self.tr = Tr(self.kiwoom, self.event_loop, self.log)
+        self.chejan = CheJan(self)
+
+        self.init_timers()
 
     # ------------------------------------------
     # 주기 실행 타이머 초기화
@@ -119,11 +123,6 @@ class AMain:
 
             kw.logIn.LogIn(self.kiwoom, self.event_loop)  # 로그인
             self.code_list()
-
-            self.rl = kw.rl.Rl(self.kiwoom)
-            self.rl.data_signal.connect(self.on_real_data)
-            self.tr = kw.tr.Tr(self.kiwoom, self.event_loop)
-            self.chejan = kw.chejan.CheJan()
 
             self.ui.show()
 
