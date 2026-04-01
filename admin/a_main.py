@@ -83,8 +83,7 @@ class AMain:
 
         if v.tr_sta:
             v.price_c = price_c
-
-            self.ui.price_c_lb.setText(f'{price_c:.2f}')
+            self.ui.table_monitoring(gubun="ma", type_vlaue="price_c", value=f'{price_c:.2f}')
             # 프로그레스바
             self.ui.rl_bar.setValue(self._bar_cnr_rl)
             self._bar_cnr_rl += 1
@@ -98,13 +97,6 @@ class AMain:
 
         tick = 0
         if v.vol_get_1 != 0:
-            self.ui.price_c_lb_1.setText(f'{price_c:.2f}')
-            # 프로그레스바
-            self.ui.rl_bar_1.setValue(self._bar_cnr_rl_1)
-            self._bar_cnr_rl_1 += 1
-            if self._bar_cnr_rl_1 > 100:
-                self._bar_cnr_rl_1 = 0
-
             if v.medosu_gubun_1 == "mesu":
                 tick = int((price_c - v.price_get_1) / 0.05)
             elif v.medosu_gubun_1 == "medo":
@@ -113,11 +105,20 @@ class AMain:
             self.ui.table_tr_1(gubun="rl", value=tick)
 
         if v.tr_sta_1:
+            self.ui.table_monitoring(gubun="line", type_vlaue="price_c", value=f'{price_c:.2f}')
+            # 프로그레스바
+            self.ui.rl_bar_1.setValue(self._bar_cnr_rl_1)
+            self._bar_cnr_rl_1 += 1
+            if self._bar_cnr_rl_1 > 100:
+                self._bar_cnr_rl_1 = 0
+
             data["tick"] = tick
             self._rl_admin_1.rl_admin_1(data)
 
+    # ------------------------------------------
+    # 0.2초 정기 실행
+    # ------------------------------------------
     def run_1sec(self):
-
         if v.step == 0:
             v.step = 1
 
@@ -142,8 +143,8 @@ class AMain:
             time_now = datetime.now()
             time_value = int(time_now.strftime("%H%M%S"))
             time_idx = time_now.strftime("%H:%M %S")
-            self.ui.time_lb.setText(time_idx)
-            self.ui.time_lb_1.setText(time_idx)
+            self.ui.table_monitoring(gubun="ma", type_vlaue="time", value=time_idx)
+            self.ui.table_monitoring(gubun="line", type_vlaue="time", value=time_idx)
 
             if v.tr_sta:
                 base_min = v.df['time'].iloc[-1]  # 20251111133500 이런 형태 / 문자열

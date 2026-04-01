@@ -29,7 +29,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -134,30 +134,6 @@
       </property>
       <property name="text">
        <string>■ 매매현황</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="price_c_lb">
-      <property name="geometry">
-       <rect>
-        <x>560</x>
-        <y>430</y>
-        <width>121</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>맑은 고딕</family>
-        <pointsize>20</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>현재가</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
       </property>
      </widget>
      <widget class="QComboBox" name="min_cb">
@@ -475,7 +451,7 @@
        <number>3</number>
       </property>
       <attribute name="horizontalHeaderVisible">
-       <bool>false</bool>
+       <bool>true</bool>
       </attribute>
       <attribute name="horizontalHeaderMinimumSectionSize">
        <number>34</number>
@@ -542,19 +518,6 @@
       </property>
       <property name="text">
        <string>■ 분할청산정보</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="time_lb">
-      <property name="geometry">
-       <rect>
-        <x>470</x>
-        <y>456</y>
-        <width>81</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>현재시간</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_6">
@@ -666,7 +629,7 @@
        <string>TP 후 매매종료</string>
       </property>
      </widget>
-     <widget class="QTableWidget" name="mnt_tw_line_2">
+     <widget class="QTableWidget" name="mnt_tw_ma">
       <property name="geometry">
        <rect>
         <x>740</x>
@@ -682,7 +645,7 @@
        <enum>Qt::ScrollBarAlwaysOff</enum>
       </property>
       <property name="rowCount">
-       <number>4</number>
+       <number>5</number>
       </property>
       <property name="columnCount">
        <number>2</number>
@@ -696,6 +659,7 @@
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
+      <row/>
       <row/>
       <row/>
       <row/>
@@ -714,12 +678,17 @@
       </item>
       <item row="2" column="0">
        <property name="text">
-        <string>기준고가</string>
+        <string>현재이평값</string>
        </property>
       </item>
       <item row="3" column="0">
        <property name="text">
-        <string>기준선</string>
+        <string>1봉전 종가</string>
+       </property>
+      </item>
+      <item row="4" column="0">
+       <property name="text">
+        <string>1봉전 이평</string>
        </property>
       </item>
      </widget>
@@ -827,30 +796,6 @@
       </property>
       <property name="text">
        <string>■ 매매현황</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="price_c_lb_1">
-      <property name="geometry">
-       <rect>
-        <x>560</x>
-        <y>430</y>
-        <width>121</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>맑은 고딕</family>
-        <pointsize>20</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>현재가</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
       </property>
      </widget>
      <widget class="QComboBox" name="min_cb_1">
@@ -1108,19 +1053,6 @@
       </property>
       <property name="text">
        <string>■ 기준선 정보</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="time_lb_1">
-      <property name="geometry">
-       <rect>
-        <x>470</x>
-        <y>456</y>
-        <width>81</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>현재시간</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_13">
@@ -1457,7 +1389,7 @@
        <enum>Qt::ScrollBarAlwaysOff</enum>
       </property>
       <property name="rowCount">
-       <number>4</number>
+       <number>5</number>
       </property>
       <property name="columnCount">
        <number>2</number>
@@ -1471,6 +1403,7 @@
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
+      <row/>
       <row/>
       <row/>
       <row/>
@@ -1489,12 +1422,17 @@
       </item>
       <item row="2" column="0">
        <property name="text">
-        <string>기준고가</string>
+        <string>메인기준선</string>
        </property>
       </item>
       <item row="3" column="0">
        <property name="text">
-        <string>기준선</string>
+        <string>1차기준선</string>
+       </property>
+      </item>
+      <item row="4" column="0">
+       <property name="text">
+        <string>연속기준선</string>
        </property>
       </item>
      </widget>
@@ -1514,7 +1452,6 @@
      <zorder>mnt_tw_line</zorder>
      <zorder>table_tw_1</zorder>
      <zorder>time_lb_6</zorder>
-     <zorder>price_c_lb_1</zorder>
      <zorder>min_cb_1</zorder>
      <zorder>label_8</zorder>
      <zorder>code_cb_1</zorder>
@@ -1527,7 +1464,6 @@
      <zorder>start_pb_1</zorder>
      <zorder>label_11</zorder>
      <zorder>time_lb_9</zorder>
-     <zorder>time_lb_1</zorder>
      <zorder>label_13</zorder>
      <zorder>line_base_le</zorder>
      <zorder>line_1_le</zorder>

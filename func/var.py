@@ -36,7 +36,7 @@ class Var:
     code = ""
     code_1 = ""
     step: int = 0
-    tr_sta = False  # 프로그램 시작/중지
+    tr_sta = False    # 프로그램 시작/중지
     tr_sta_1 = False  # 프로그램 시작/중지
     price_c = 0
     price_c_1 = 0
@@ -47,13 +47,13 @@ class Var:
     vol_get_1 = 0
     vol_base = 0
     vol_base_1 = 0
-    time_get = ""  # 진입봉시간
+    time_get = ""    # 진입봉시간
     time_get_1 = ""  # 진입봉시간
     medosu_gubun = ""
     medosu_gubun_1 = ""
 
     tp = 0
-    tp_done = False  # TP 후 매매종료
+    tp_done = False    # TP 후 매매종료
     tp_1 = 0
     tp_done_1 = False  # TP 후 매매종료
 
@@ -72,7 +72,7 @@ class Var:
 
     sgn_user_buy = False
     sgn_user_buy_1 = False
-    pst_sta = ""  # 현재 이평 위치 / 매수자리냐 매도자리냐 / 강제진입에서 "강제" 부분에 대한 정의
+    pst_sta = ""    # 현재 이평 위치 / 매수자리냐 매도자리냐 / 강제진입에서 "강제" 부분에 대한 정의
     od_fst = False  # 최초 진입 체크 > 최초 1회 자동진입시에만 위치 매매 > 이후는 이평 크로스매매
 
     clear_cnt_base = 0  # 청산회수 설정

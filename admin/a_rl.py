@@ -62,6 +62,13 @@ class RlAdmin:
                 self.log.debug(f'강제진입여부 : {v.sgn_user_buy}')
                 self.log.debug(f'현재보유수량 : {v.vol_get}')
 
+            ma_value_rl = v.df["ma_value"].iloc[-1]
+            self.a.ui.table_monitoring(gubun="ma", type_vlaue="ma_value", value=f'{ma_value_rl:.2f}')
+            ma_value_1 = v.df["ma_value"].iloc[-2]
+            self.a.ui.table_monitoring(gubun="ma", type_vlaue="ma_value_1", value=f'{ma_value_1:.2f}')
+            price_c_1 = v.df["price_c"].iloc[-2]
+            self.a.ui.table_monitoring(gubun="ma", type_vlaue="price_c_1", value=f'{price_c_1:.2f}')
+
             if v.vol_get != 0:
                 tick = None
                 if v.price_get != 0:

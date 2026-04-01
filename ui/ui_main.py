@@ -34,6 +34,8 @@ class UiMain(QMainWindow):
         self.buy_cnt_cb.addItems(time3)
         self.buy_cnt_cb_1.addItems(time3)
 
+        self.clear_table_tw_1.horizontalHeader().setVisible(True)  # 기준선매매 분할청산 테이블 해더 보이기
+
     # 테이블 수정 불가 설정 함수
     @staticmethod
     def set_table_non_editable(*tables):
@@ -326,6 +328,8 @@ class UiMain(QMainWindow):
                 self.tp_le.setDisabled(True)
                 self.checkBox.setDisabled(True)
 
+                # noinspection PyProtectedMember
+                self.a._rl_admin_1.prev_value_high = None
                 self.a.pgr_run(1)
             else:
                 v.tr_sta_1 = False
@@ -797,6 +801,32 @@ class UiMain(QMainWindow):
         elif gubun == "rl":
             table.setItem(3, 1, QTableWidgetItem(f"{value}"))
             table.item(3, 1).setTextAlignment(align)
+
+    def table_monitoring(self, gubun, type_vlaue, value):
+        table = getattr(self, f'mnt_tw_{gubun}')
+        align = Qt.AlignCenter | Qt.AlignCenter
+        row = None
+        if type_vlaue == "time":
+            row = 0
+        elif type_vlaue == "price_c":
+            row = 1
+        elif type_vlaue == "ma_value":
+            row = 2
+        elif type_vlaue == "ma_value_1":
+            row = 3
+        elif type_vlaue == "price_c_1":
+            row = 4
+
+        elif type_vlaue == "line_main":
+            row = 2
+        elif type_vlaue == "line_line_1":
+            row = 3
+        elif type_vlaue == "line_rpt_1":
+            row = 4
+
+        if row is not None:
+            table.setItem(row, 1, QTableWidgetItem(f"{value}"))
+            table.item(row, 1).setTextAlignment(align)
 
     def log_ui(self, text):
         time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
