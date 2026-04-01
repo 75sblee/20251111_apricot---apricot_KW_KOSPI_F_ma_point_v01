@@ -122,7 +122,7 @@ class AMain:
         if v.step == 0:
             v.step = 1
 
-            kw.logIn.LogIn(self.kiwoom, self.event_loop)  # 로그인
+            kw.logIn.LogIn(self.kiwoom, self.event_loop, self.lib, self.log)  # 로그인
             self.code_list()
 
             self.ui.show()
