@@ -328,6 +328,8 @@ class UiMain(QMainWindow):
                 self.tp_le.setDisabled(True)
                 self.checkBox.setDisabled(True)
 
+                self.clear_table_tw_1.setDisabled(True)
+
                 # noinspection PyProtectedMember
                 self.a._rl_admin_1.prev_value_high = None
                 self.a.pgr_run(1)
@@ -366,6 +368,8 @@ class UiMain(QMainWindow):
                 self.clear_table_tw.setDisabled(False)
                 self.tp_le.setDisabled(False)
                 self.checkBox.setDisabled(False)
+
+                self.clear_table_tw_1.setDisabled(False)
 
                 if v.vol_get_1 == 0:
                     self.code_cb_1.setDisabled(False)

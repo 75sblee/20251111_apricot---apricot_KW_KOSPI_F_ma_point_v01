@@ -257,3 +257,25 @@ class RlAdmin1:
 
         lines = self._build_lines(value_high)
         has_pos, is_long, is_short = self._pos_state()
+
+        # 분할청산
+        if v.vol_get_1 != 0:  # 물량 보유 중일 때
+
+            if v.medosu_gubun_1 == "mesu":
+                medosu_gubun = "medo"
+            elif v.medosu_gubun_1 == "medo":
+                medosu_gubun = "mesu"
+
+            if v.clear_cnt_base != 0:  # 분할 청산이 있을 때
+                chk_clear_cnt = v.clear_cnt + 1
+
+                if v.clear_cnt_base >= chk_clear_cnt:
+                    tick_chk = v.clear_info_1[str(chk_clear_cnt)]["target_tick"]
+                    vol = v.clear_info_1[str(chk_clear_cnt)]["vol"]
+                    if tick >= tick_chk:
+                        v.clear_cnt_1 += 1
+                        idx = f'✅  {chk_clear_cnt}차 청산 | vol_get : {v.vol_get_1} | vol : {vol}'
+                        self.log.info(idx)
+                        self.ui.log_ui_1(text=idx)
+                        v.vol_get -= vol
+                        self.a.order(code=v.code, medosu_gubun=medosu_gubun, vol=vol)
