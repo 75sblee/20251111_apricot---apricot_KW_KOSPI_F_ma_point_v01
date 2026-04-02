@@ -1,5 +1,5 @@
 
-from func.var_global import *
+from func.var import Var as v
 
 from datetime import datetime, timedelta
 # noinspection PyPackageRequirements
@@ -9,15 +9,17 @@ from PyQt5.QtCore import QObject, pyqtSignal
 class Rl(QObject):
     data_signal = pyqtSignal(dict)
 
-    def __init__(self, kiwoom):
+    def __init__(self, kiwoom, lib, log):
         super().__init__()
+        self.lib = lib
+        self.log = log
         self.kiwoom = kiwoom
         self.kiwoom.OnReceiveRealData.connect(self.realdata_slot)
 
     def rl_rq(self, code):
-        log.info(f'실시간 요청 : {var.code}')
+        self.log.info(f'실시간 요청 : {v.code}')
         result = self.kiwoom.dynamicCall("SetRealReg(QString, QString, QString, QString)", "1000", code, "10", "0")
-        log.info(f'실시간 요청 결과 : {result}')
+        self.log.info(f'실시간 요청 결과 : {result}')
 
     def realdata_slot(self, sCode, sRealType):
         """
@@ -29,7 +31,7 @@ class Rl(QObject):
         """
         code = sCode.strip()
 
-        sRealType = lib.encoding(sRealType)
+        sRealType = self.lib.encoding(sRealType)
 
         if sRealType == "선물시세":
             price_c = self.kiwoom.dynamicCall("GetCommRealData(QString, int)", code, 10)  # fid 현재가

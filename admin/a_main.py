@@ -63,7 +63,7 @@ class AMain:
 
         self.timer_1 = QTimer()
 
-        self.rl = Rl(self.kiwoom)
+        self.rl = Rl(self.kiwoom, self.lib, self.log)
         self.rl.data_signal.connect(self.on_real_data)
         self.tr = Tr(self.kiwoom, self.event_loop, self.log)
         self.chejan = CheJan(self)
@@ -96,7 +96,7 @@ class AMain:
             v.price_c_1 = price_c
 
         tick = 0
-        if v.vol_get_1 != 0:
+        if v.vol_get_1 != 0 and v.price_get_1 != 0:
             if v.medosu_gubun_1 == "mesu":
                 tick = int((price_c - v.price_get_1) / 0.05)
             elif v.medosu_gubun_1 == "medo":

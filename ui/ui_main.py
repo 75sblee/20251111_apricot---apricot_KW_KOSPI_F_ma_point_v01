@@ -278,6 +278,10 @@ class UiMain(QMainWindow):
                 self.log.info(idx)
                 self.log_ui_1(text=idx)
 
+                idx = f'매매시작정보(기준선매매) | 분할청산회수 : {v.clear_cnt_base_1}'
+                self.log.info(idx)
+                self.log_ui_1(text=idx)
+
                 self.log.info(f'clear_info : {v.clear_info}')
 
                 if v.clear_info_1:
@@ -659,7 +663,7 @@ class UiMain(QMainWindow):
         v.clear_info = {}
         if text != "":
             row = int(text)
-            v.clear_cnt_base = row
+            v.clear_cnt_base = row + 1
 
             self.clear_table_tw.setRowCount(row)
 
