@@ -2,6 +2,8 @@
 ## 환경
 PY39_32
 
+## 빌드
+pyinstaller -F main.py
 
 ## 버전정보
 

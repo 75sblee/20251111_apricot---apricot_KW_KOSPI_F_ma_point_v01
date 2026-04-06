@@ -71,6 +71,7 @@ class CheJan:
                         self.log.info(f'📕 체결가 : {v.price_get}')
                         self.a.ui.table_tr(gubun="set", value=None)
 
+                    # 스위칭 주문
                     if v.sgn_medosu and micheCnt == 0:
                         v.sgn_medosu = False
                         self.log.info(f'청산 확인 후 주문')

@@ -76,6 +76,7 @@ class RlAdmin1:
         v.medosu_gubun_1 = "mesu"
         v.vol_get_1 = v.vol_base_1
         v.price_get_1 = 0
+        v.clear_cnt_1 = 0
 
         msg = f"🔴 [진입_매수] 기준={line_name}({line_value:.4f})"
         self.log.info(msg)
@@ -95,6 +96,7 @@ class RlAdmin1:
         v.medosu_gubun_1 = "medo"
         v.vol_get_1 = v.vol_base_1
         v.price_get_1 = 0
+        v.clear_cnt_1 = 0
 
         msg = f"🔵 [진입_매도] 기준={line_name}({line_value:.4f})"
         self.log.info(msg)

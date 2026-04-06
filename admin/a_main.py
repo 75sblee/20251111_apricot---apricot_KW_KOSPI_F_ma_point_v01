@@ -75,6 +75,7 @@ class AMain:
     # ------------------------------------------
     def init_timers(self):
         # 1초 타이머
+        # noinspection PyUnresolvedReferences
         self.timer_1.timeout.connect(self.run_1sec)
         self.timer_1.start(200)
 

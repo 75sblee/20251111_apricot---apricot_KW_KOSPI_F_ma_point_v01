@@ -20,7 +20,7 @@ class RlAdmin:
         price_c = data["price_c"]
         time_c = data["time_c"]
 
-        if v.df is not None:
+        if not v.df.empty:
             # 판다스
             base_min = v.df['time'].iloc[-1][:12]
             base_min = datetime.strptime(base_min, "%Y%m%d%H%M")

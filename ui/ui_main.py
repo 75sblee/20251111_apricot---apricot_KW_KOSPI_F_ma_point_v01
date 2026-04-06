@@ -126,8 +126,10 @@ class UiMain(QMainWindow):
                 self.log_ui(text=idx)
 
                 self.log.info(f'clear_info : {v.clear_info}')
+                v.clear_cnt_base = 0
 
                 if v.clear_info:
+                    v.clear_cnt_base = len(v.clear_info)
                     clear_cnt_sum = 0
                     for i in v.clear_info:
                         vol = v.clear_info[i]["vol"]
@@ -278,13 +280,10 @@ class UiMain(QMainWindow):
                 self.log.info(idx)
                 self.log_ui_1(text=idx)
 
-                idx = f'매매시작정보(기준선매매) | 분할청산회수 : {v.clear_cnt_base_1}'
-                self.log.info(idx)
-                self.log_ui_1(text=idx)
-
-                self.log.info(f'clear_info : {v.clear_info}')
-
+                self.log.info(f'clear_info : {v.clear_info_1}')
+                v.clear_cnt_base_1 = 0
                 if v.clear_info_1:
+                    v.clear_cnt_base_1 = len(v.clear_info_1)
                     clear_cnt_sum = 0
                     for i in v.clear_info_1:
                         vol = v.clear_info_1[i]["vol"]
@@ -292,6 +291,10 @@ class UiMain(QMainWindow):
                     if clear_cnt_sum > v.vol_base_1 - 1:
                         msg_box(f'분할 청산 개수 확인 하세요')
                         return
+
+                idx = f'매매시작정보(기준선매매) | 분할청산회수 : {v.clear_cnt_base_1}'
+                self.log.info(idx)
+                self.log_ui_1(text=idx)
 
                 v.tr_sta_1 = True
                 idx = "✅ 매매시작"
@@ -659,11 +662,9 @@ class UiMain(QMainWindow):
 
         self.lib.w_sound(hz=200, time_ss=80, cnt=1)
         self.clear_table_tw.setRowCount(0)
-        v.clear_cnt_base = 0  # 초기화
         v.clear_info = {}
         if text != "":
             row = int(text)
-            v.clear_cnt_base = row + 1
 
             self.clear_table_tw.setRowCount(row)
 
@@ -688,11 +689,9 @@ class UiMain(QMainWindow):
 
         self.lib.w_sound(hz=200, time_ss=80, cnt=1)
         self.clear_table_tw_1.setRowCount(0)
-        v.clear_cnt_base_1 = 0  # 초기화
         v.clear_info_1 = {}
         if text != "":
             row = int(text)
-            v.clear_cnt_base_1 = row
 
             self.clear_table_tw_1.setRowCount(row)
 

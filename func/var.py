@@ -42,7 +42,7 @@ class Var:
     price_c_1 = 0
     price_get = 0
     price_get_1 = 0
-    df = None
+    df = pd.DataFrame()
     vol_get = 0
     vol_get_1 = 0
     vol_base = 0
