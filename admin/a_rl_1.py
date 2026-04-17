@@ -28,6 +28,18 @@ class RlAdmin1:
         if not hasattr(v, "vol_get_1"):
             v.vol_get_1 = 0
 
+        self.prev_lines = None  # 상태값
+
+    # ======================================================
+    # 위치 판별 함수
+    # ======================================================
+    @staticmethod
+    def _get_close_position(close, lines):
+        for name, lvl in lines:
+            if close >= lvl:
+                return name, "above"
+        return None, "below"
+
     # ======================================================
     # 포지션 상태
     # ======================================================
@@ -242,134 +254,108 @@ class RlAdmin1:
 
         has_pos, is_long, is_short = self._pos_state()
 
+        # =========================
+        # 기준선 변경 로그
+        # =========================
         if self.prev_value_high is None or value_high != self.prev_value_high:
 
             self.prev_value_high = value_high
 
             line_dict = dict(lines)
-
-            line_main = line_dict.get("main")
-            line_line_1 = line_dict.get("line_1")
-            line_rpt_1 = line_dict.get("rpt_1")
-
             msg = "[기준선]"
-            if line_main:
-                msg += f" main={line_main:.4f}"
-            if line_line_1:
-                msg += f" line_1={line_line_1:.4f}"
-            if line_rpt_1:
-                msg += f" rpt_1={line_rpt_1:.4f}"
+            if line_dict.get("main"):
+                msg += f" main={line_dict['main']:.4f}"
+            if line_dict.get("line_1"):
+                msg += f" line_1={line_dict['line_1']:.4f}"
+            if line_dict.get("rpt_1"):
+                msg += f" rpt_1={line_dict['rpt_1']:.4f}"
 
             self.log.info(msg)
 
-            text = f'➡️  기준고가 : {value_high}'
-            self.log.info(text)
-            self.ui.log_ui_1(text=text)
-
-            self.ui.table_monitoring("line", "line_main", f'{line_main:.2f}' if line_main else "-")
-            self.ui.table_monitoring("line", "line_line_1", f'{line_line_1:.2f}' if line_line_1 else "-")
-            self.ui.table_monitoring("line", "line_rpt_1", f'{line_rpt_1:.2f}' if line_rpt_1 else "-")
-
-        # ==========================
+        # =========================
         # 실시간 TP
-        # ==========================
-        if has_pos:
-            if v.tp_1 != 0:
-                if tick >= v.tp_1:
-                    idx = f'✅  TP 청산 | vol_get : {v.vol_get_1} | tick : {tick}'
-                    self.log.info(idx)
-                    self.a.ui.log_ui_1(text=idx)
+        # =========================
+        if has_pos and v.tp_1 != 0:
+            if tick >= v.tp_1:
+                self.exit_position(price_c, "TP", "", 0)
+                return
 
-                    if v.medosu_gubun_1 == "mesu":
-                        self.a.order(code=v.code_1, medosu_gubun="medo", vol=v.vol_get_1)
-                    elif v.medosu_gubun_1 == "medo":
-                        self.a.order(code=v.code_1, medosu_gubun="mesu", vol=v.vol_get_1)
-
-                    v.medosu_gubun_1 = ""
-                    v.vol_get_1 = 0
-                    v.clear_cnt_1 = 0
-
-                    if v.tp_done_1:
-                        self.a.ui.start_pb_1.click()
-                        idx = f'✅  TP 청산 후 매매종료 | '
-                        self.log.info(idx)
-                        self.a.ui.log_ui_1(text=idx)
-
-                    return
-
-        # ==========================
-        # 실시간 TP (다음 선 터치)
-        # ==========================
+        # =========================
+        # 실시간 TP (라인)
+        # =========================
         if has_pos and self.entry_candle_time != v.df.iloc[-1]["time"]:
 
             tp_line = self._get_tp_line(lines, is_long, is_short)
-
             if tp_line:
                 tp_name, tp_value = tp_line
 
-                # 🔴 매수 → 위 라인 도달
                 if is_long and price_c >= tp_value:
-                    self.log.info(f"⭕️  [TP_line] {tp_name}({tp_value:.4f}) 터치")
                     self.exit_position(price_c, "TP_LINE", tp_name, tp_value)
                     return
 
-                # 🔵 매도 → 아래 라인 도달
                 if is_short and price_c <= tp_value:
-                    self.log.info(f"⭕️  [TP_line] {tp_name}({tp_value:.4f}) 터치")
                     self.exit_position(price_c, "TP_LINE", tp_name, tp_value)
                     return
-
-        # =========================
-        # 분할청산
-        # =========================
-        if v.vol_get_1 != 0:
-
-            if v.medosu_gubun_1 == "mesu":
-                medosu_gubun = "medo"
-            else:
-                medosu_gubun = "mesu"
-
-            if v.clear_cnt_base_1 != 0:
-                chk_clear_cnt = v.clear_cnt_1 + 1
-
-                if v.clear_cnt_base_1 >= chk_clear_cnt:
-                    tick_chk = v.clear_info_1[str(chk_clear_cnt)]["target_tick"]
-                    vol = v.clear_info_1[str(chk_clear_cnt)]["vol"]
-
-                    if tick >= tick_chk:
-                        v.clear_cnt_1 += 1
-
-                        msg = f'✅ {chk_clear_cnt}차 청산 | 남은수량={v.vol_get_1} | 청산={vol}'
-                        self.log.info(msg)
-                        self.ui.log_ui_1(text=msg)
-
-                        v.vol_get_1 -= vol
-
-                        self.a.order(
-                            code=v.code_1,
-                            medosu_gubun=medosu_gubun,
-                            vol=vol
-                        )
 
         if not update_min:
             return
 
-        # ==========================
-        # 봉 마감 처리 (이전 봉)
-        # ==========================
+        # =========================
+        # 봉 마감 기준
+        # =========================
         prev = v.df.iloc[-2]
         o = float(prev["price_o"])
         c = float(prev["price_c"])
-        self._print_close_lines(lines, c, prev["time"])
 
-        # ==========================
-        # ✅ 스위칭: "진입 기준라인"을 종가로 반대로 넘으면
-        # (기준선은 항상 최신 값 사용)
-        # ==========================
-        has_pos, is_long, is_short = self._pos_state()
+        # =========================
+        # 🔥 라인 이동 진입 (최종 안정화)
+        # =========================
+        if (
+                not has_pos
+                and self.prev_lines is not None
+                and self.prev_lines != lines
+        ):
 
+            prev_name, prev_pos = self._get_close_position(c, self.prev_lines)
+            curr_name, curr_pos = self._get_close_position(c, lines)
+
+            # 안전장치
+            if curr_name is None:
+                return
+
+            # 진짜 라인 이동만
+            if prev_name == curr_name:
+                return
+
+            # 🔴 아래 → 위
+            if prev_pos == "below" and curr_pos == "above":
+
+                line_name = curr_name
+                line_value = dict(lines)[curr_name]
+
+                band = self._find_band_with_name(line_value, lines)
+                if band:
+                    up_name, up, dn_name, dn = band
+                    self.enter_long(time_c, up, dn, line_name, line_value)
+                    return
+
+            # 🔵 위 → 아래
+            if prev_pos == "above" and curr_pos == "below":
+
+                line_name = curr_name
+                line_value = dict(lines)[curr_name]
+
+                band = self._find_band_with_name(line_value, lines)
+                if band:
+                    up_name, up, dn_name, dn = band
+                    self.enter_short(time_c, up, dn, line_name, line_value)
+                    return
+
+        # =========================
+        # 스위칭
+        # =========================
         if has_pos and v.entry_line_name is not None:
-            # 최신 기준선 가격 다시 찾기
+
             cur_entry_value = None
             for n, v1 in lines:
                 if n == v.entry_line_name:
@@ -377,52 +363,42 @@ class RlAdmin1:
                     break
 
             if cur_entry_value is not None:
-                bk_upper = self.band_upper
-                bk_lower = self.band_lower
-                bk_name = v.entry_line_name
 
-                # 롱 → 기준선 아래로 마감
                 if is_long and c < cur_entry_value:
-                    self.log.info(
-                        f"🔵  [스위칭] 기준선 하향이탈: "
-                        f"{bk_name}({cur_entry_value:.4f}) 종가={c:.4f}"
-                    )
-                    self.exit_position(c, "SWITCH_ENTRY_LINE", bk_name, cur_entry_value)
-                    self.enter_short(time_c, bk_upper, bk_lower, bk_name, cur_entry_value)
+                    bk_name = v.entry_line_name
+
+                    self.exit_position(c, "SWITCH", bk_name, cur_entry_value)
+                    self.enter_short(time_c, self.band_upper, self.band_lower, bk_name, cur_entry_value)
                     return
 
-                # 숏 → 기준선 위로 마감
                 if is_short and c > cur_entry_value:
-                    self.log.info(
-                        f"🔴  [스위칭] 기준선 상향돌파: "
-                        f"{bk_name}({cur_entry_value:.4f}) 종가={c:.4f}"
-                    )
-                    self.exit_position(c, "SWITCH_ENTRY_LINE", bk_name, cur_entry_value)
-                    self.enter_long(time_c, bk_upper, bk_lower, bk_name, cur_entry_value)
+                    bk_name = v.entry_line_name
+
+                    self.exit_position(c, "SWITCH", bk_name, cur_entry_value)
+                    self.enter_long(time_c, self.band_upper, self.band_lower, bk_name, cur_entry_value)
                     return
 
-        # ==========================
-        # 신규 진입 – 라인 돌파 (봉 마감 기준)
-        # ==========================
+        # =========================
+        # 기존 돌파 진입
+        # =========================
         if not has_pos and self.exit_candle_time != v.df.iloc[-1]["time"]:
             band = self._find_band_with_name(o, lines)
             if band:
                 up_name, up, dn_name, dn = band
 
                 if c > up:
-                    # 롱 진입 기준라인 = up
                     self.enter_long(time_c, up, dn, up_name, up)
                     return
 
                 if c < dn:
-                    # 숏 진입 기준라인 = dn
                     self.enter_short(time_c, up, dn, dn_name, dn)
                     return
 
-        # ==========================
-        # 신규 진입 – 라인 걸침 (이전 봉 기준, 종가 방향) - 회기진입
-        # ==========================
+        # =========================
+        # 회기 진입
+        # =========================
         if not has_pos and self.exit_candle_time != v.df.iloc[-1]["time"]:
+
             prev_h = float(prev["price_h"])
             prev_l = float(prev["price_l"])
             prev_c = float(prev["price_c"])
@@ -430,6 +406,7 @@ class RlAdmin1:
             crossed = self._find_crossed_line(prev_h, prev_l, lines)
             if crossed:
                 line_name, line_value = crossed
+
                 band = self._find_band_with_name(line_value, lines)
                 if band:
                     up_name, up, dn_name, dn = band
@@ -441,3 +418,8 @@ class RlAdmin1:
                     if prev_c < line_value:
                         self.enter_short(time_c, up, dn, line_name, line_value)
                         return
+
+        # =========================
+        # 마지막 상태 저장
+        # =========================
+        self.prev_lines = lines.copy()
