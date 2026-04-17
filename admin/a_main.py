@@ -40,8 +40,8 @@ class AMain:
 
         self.log.info("")
         self.log.info("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■")
-        self.log.info("apricot_KW_KOSPI_F_ma_point_v01_20260330")
-        self.log.info("20260330-14")
+        self.log.info("apricot_KW_KOSPI_F_ma_point_v01")
+        self.log.info("20260418-00")
         self.log.info("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■")
         self.log.info("")
 
