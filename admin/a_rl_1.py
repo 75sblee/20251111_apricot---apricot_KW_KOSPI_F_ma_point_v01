@@ -139,6 +139,8 @@ class RlAdmin1:
         v.entry_line_name = None
         v.entry_line_value = None
 
+        self.ui.table_tr_1(gubun="set", value=None)
+
     # ======================================================
     # TP 기준 라인
     # ======================================================
@@ -208,6 +210,41 @@ class RlAdmin1:
         return None
 
     # ======================================================
+    # 분할청산
+    # ======================================================
+    def partial_exit(self, price, reason, target_tick, clear_vol):
+
+        msg = f"🟡 [분할청산] price={price:.4f} tick={target_tick} vol={clear_vol} reason={reason}"
+        self.log.info(msg)
+        self.ui.log_ui_1(text=msg)
+
+        # 현재 포지션 방향 반대로 청산
+        if v.medosu_gubun_1 == "mesu":
+            self.a.order(code=v.code_1, medosu_gubun="medo", vol=clear_vol)
+        elif v.medosu_gubun_1 == "medo":
+            self.a.order(code=v.code_1, medosu_gubun="mesu", vol=clear_vol)
+
+        # 수량 감소
+        v.vol_get_1 -= clear_vol
+        v.clear_cnt_1 += 1
+
+        # 안전장치
+        if v.vol_get_1 <= 0:
+            v.vol_get_1 = 0
+            v.medosu_gubun_1 = ""
+
+        self.ui.table_tr_1(gubun="set", value=None)
+
+    # ======================================================
+    # 분할 완료 여부
+    # ======================================================
+    @staticmethod
+    def _is_clear_done():
+        if v.clear_cnt_base_1 == 0:
+            return True
+        return v.clear_cnt_1 >= v.clear_cnt_base_1
+
+    # ======================================================
     # 메인
     # ======================================================
     def rl_admin_1(self, data):
@@ -263,42 +300,94 @@ class RlAdmin1:
 
             line_dict = dict(lines)
             msg = "[기준선]"
+            line_main = ""
+            line_line_1 = ""
+            line_rpt_1 = ""
             if line_dict.get("main"):
-                msg += f" main={line_dict['main']:.4f}"
+                line_main = f"{line_dict['main']:.2f}"
+                msg += f" main={line_main}"
             if line_dict.get("line_1"):
-                msg += f" line_1={line_dict['line_1']:.4f}"
+                line_line_1 = f"{line_dict['line_1']:.2f}"
+                msg += f" line_1={line_line_1}"
             if line_dict.get("rpt_1"):
-                msg += f" rpt_1={line_dict['rpt_1']:.4f}"
+                line_rpt_1 = f"{line_dict['rpt_1']:.2f}"
+                msg += f" rpt_1={line_rpt_1}"
 
             self.log.info(msg)
+            self.a.ui.table_monitoring(gubun="line", type_vlaue="line_main", value=f'{line_main}')
+            self.a.ui.table_monitoring(gubun="line", type_vlaue="line_line_1", value=f'{line_line_1}')
+            self.a.ui.table_monitoring(gubun="line", type_vlaue="line_rpt_1", value=f'{line_rpt_1}')
+
+        # =========================
+        # 분할청산 (실시간)
+        # =========================
+        if has_pos and v.clear_cnt_base_1 != 0:
+
+            if v.clear_cnt_1 < v.clear_cnt_base_1:
+
+                clear_key = str(v.clear_cnt_1 + 1)
+                clear_data = v.clear_info_1.get(clear_key)
+
+                if clear_data:
+                    target_tick = clear_data.get("target_tick", 0)
+                    clear_vol = clear_data.get("vol", 0)
+
+                    if target_tick > 0 and clear_vol > 0:
+
+                        if tick >= target_tick:
+
+                            clear_vol = min(clear_vol, v.vol_get_1)
+
+                            self.partial_exit(price_c, "PARTIAL_TP", target_tick, clear_vol)
+
+                            # 🔥 마지막 분할이면 return 안함 (다음 로직 허용)
+                            if not self._is_clear_done():
+                                return
 
         # =========================
         # 실시간 TP
         # =========================
         if has_pos and v.tp_1 != 0:
-            if tick >= v.tp_1:
-                self.exit_position(price_c, "TP", "", 0)
-                return
+
+            # 🔥 분할 끝나야 TP 허용
+            if self._is_clear_done():
+
+                if tick >= v.tp_1:
+                    self.exit_position(price_c, "TP", "", 0)
+                    return
 
         # =========================
         # 실시간 TP (라인)
         # =========================
         if has_pos and self.entry_candle_time != v.df.iloc[-1]["time"]:
 
-            tp_line = self._get_tp_line(lines, is_long, is_short)
-            if tp_line:
-                tp_name, tp_value = tp_line
+            # 🔥 분할 끝나야 허용
+            if self._is_clear_done():
 
-                if is_long and price_c >= tp_value:
-                    self.exit_position(price_c, "TP_LINE", tp_name, tp_value)
-                    return
+                tp_line = self._get_tp_line(lines, is_long, is_short)
+                if tp_line:
+                    tp_name, tp_value = tp_line
 
-                if is_short and price_c <= tp_value:
-                    self.exit_position(price_c, "TP_LINE", tp_name, tp_value)
-                    return
+                    if is_long and price_c >= tp_value:
+                        self.exit_position(price_c, "TP_LINE", tp_name, tp_value)
+                        return
+
+                    if is_short and price_c <= tp_value:
+                        self.exit_position(price_c, "TP_LINE", tp_name, tp_value)
+                        return
 
         if not update_min:
             return
+
+        # =========================
+        # 봉 마감 정기 로그
+        # =========================
+        self.log.debug(f'')
+        self.log.debug(f'has_pos : {has_pos}')
+        self.log.debug(f'prev_lines : {self.prev_lines}')
+        self.log.debug(f'lines : {lines}')
+        self.log.debug(f'entry_line_name : {v.entry_line_name}')
+        self.log.debug(f'df : \n{v.df}')
 
         # =========================
         # 봉 마감 기준
@@ -318,6 +407,11 @@ class RlAdmin1:
 
             prev_name, prev_pos = self._get_close_position(c, self.prev_lines)
             curr_name, curr_pos = self._get_close_position(c, lines)
+
+            self.log.debug(f'prev_name : {prev_name}')
+            self.log.debug(f'prev_pos : {prev_pos}')
+            self.log.debug(f'curr_name : {curr_name}')
+            self.log.debug(f'curr_pos : {curr_pos}')
 
             # 안전장치
             if curr_name is None:
@@ -379,6 +473,68 @@ class RlAdmin1:
                     return
 
         # =========================
+        # 회기 진입 + 스위칭
+        # =========================
+        if True:
+
+            prev_h = float(prev["price_h"])
+            prev_l = float(prev["price_l"])
+            prev_c = float(prev["price_c"])
+
+            for line_name, line_value in lines:
+
+                # ---------------------
+                # 1️⃣ 터치 조건 (핵심)
+                # ---------------------
+                touched = (prev_h >= line_value >= prev_l)
+
+                if not touched:
+                    continue
+
+                # ---------------------
+                # 밴드 찾기
+                # ---------------------
+                band = self._find_band_with_name(line_value, lines)
+                if not band:
+                    continue
+
+                up_name, up, dn_name, dn = band
+
+                # =====================
+                # 🔴 롱 회기
+                # (아래 → 터치 → 위 복귀)
+                # =====================
+                if prev_c > line_value:
+
+                    # 무포지션 → 진입
+                    if not has_pos:
+                        self.enter_long(time_c, up, dn, line_name, line_value)
+                        return
+
+                    # 숏 보유 → 스위칭
+                    if has_pos and is_short:
+                        self.exit_position(prev_c, "SWITCH_REVERSE", line_name, line_value)
+                        self.enter_long(time_c, up, dn, line_name, line_value)
+                        return
+
+                # =====================
+                # 🔵 숏 회기
+                # (위 → 터치 → 아래 복귀)
+                # =====================
+                if prev_c < line_value:
+
+                    # 무포지션 → 진입
+                    if not has_pos:
+                        self.enter_short(time_c, up, dn, line_name, line_value)
+                        return
+
+                    # 롱 보유 → 스위칭
+                    if has_pos and is_long:
+                        self.exit_position(prev_c, "SWITCH_REVERSE", line_name, line_value)
+                        self.enter_short(time_c, up, dn, line_name, line_value)
+                        return
+
+        # =========================
         # 기존 돌파 진입
         # =========================
         if not has_pos and self.exit_candle_time != v.df.iloc[-1]["time"]:
@@ -393,31 +549,6 @@ class RlAdmin1:
                 if c < dn:
                     self.enter_short(time_c, up, dn, dn_name, dn)
                     return
-
-        # =========================
-        # 회기 진입
-        # =========================
-        if not has_pos and self.exit_candle_time != v.df.iloc[-1]["time"]:
-
-            prev_h = float(prev["price_h"])
-            prev_l = float(prev["price_l"])
-            prev_c = float(prev["price_c"])
-
-            crossed = self._find_crossed_line(prev_h, prev_l, lines)
-            if crossed:
-                line_name, line_value = crossed
-
-                band = self._find_band_with_name(line_value, lines)
-                if band:
-                    up_name, up, dn_name, dn = band
-
-                    if prev_c > line_value:
-                        self.enter_long(time_c, up, dn, line_name, line_value)
-                        return
-
-                    if prev_c < line_value:
-                        self.enter_short(time_c, up, dn, line_name, line_value)
-                        return
 
         # =========================
         # 마지막 상태 저장
