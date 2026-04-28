@@ -382,7 +382,7 @@ class RlAdmin1:
         # =========================
         # 봉 마감 정기 로그
         # =========================
-        self.log.debug(f'')
+        self.log.debug(f'---------------------------------------------')
         self.log.debug(f'has_pos : {has_pos}')
         self.log.debug(f'prev_lines : {self.prev_lines}')
         self.log.debug(f'lines : {lines}')
@@ -397,53 +397,98 @@ class RlAdmin1:
         c = float(prev["price_c"])
 
         # =========================
-        # 🔥 라인 이동 진입 (최종 안정화)
+        # 🔥 라인 이동 진입
         # =========================
         if (
-                not has_pos
-                and self.prev_lines is not None
+                self.prev_lines is not None
                 and self.prev_lines != lines
         ):
 
             prev_name, prev_pos = self._get_close_position(c, self.prev_lines)
             curr_name, curr_pos = self._get_close_position(c, lines)
 
-            self.log.debug(f'prev_name : {prev_name}')
-            self.log.debug(f'prev_pos : {prev_pos}')
-            self.log.debug(f'curr_name : {curr_name}')
-            self.log.debug(f'curr_pos : {curr_pos}')
+            if curr_name is not None:
 
-            # 안전장치
-            if curr_name is None:
-                return
-
-            # 진짜 라인 이동만
-            if prev_name == curr_name:
-                return
-
-            # 🔴 아래 → 위
-            if prev_pos == "below" and curr_pos == "above":
-
-                line_name = curr_name
                 line_value = dict(lines)[curr_name]
-
                 band = self._find_band_with_name(line_value, lines)
+
                 if band:
                     up_name, up, dn_name, dn = band
-                    self.enter_long(time_c, up, dn, line_name, line_value)
-                    return
 
-            # 🔵 위 → 아래
-            if prev_pos == "above" and curr_pos == "below":
+                    # ---------------------
+                    # 🔴 아래 → 위
+                    # ---------------------
+                    if prev_pos == "below" and curr_pos == "above":
 
-                line_name = curr_name
-                line_value = dict(lines)[curr_name]
+                        if not has_pos:
+                            self.enter_long(time_c, up, dn, curr_name, line_value)
+                            return
 
-                band = self._find_band_with_name(line_value, lines)
-                if band:
+                        if has_pos and is_short:
+                            self.exit_position(c, "SWITCH_LINE_MOVE", curr_name, line_value)
+                            self.enter_long(time_c, up, dn, curr_name, line_value)
+                            return
+
+                    # ---------------------
+                    # 🔵 위 → 아래
+                    # ---------------------
+                    if prev_pos == "above" and curr_pos == "below":
+
+                        if not has_pos:
+                            self.enter_short(time_c, up, dn, curr_name, line_value)
+                            return
+
+                        if has_pos and is_long:
+                            self.exit_position(c, "SWITCH_LINE_MOVE", curr_name, line_value)
+                            self.enter_short(time_c, up, dn, curr_name, line_value)
+                            return
+
+        # =========================
+        # 🔥 캔들 몸통 돌파 진입 (핵심 추가)
+        # =========================
+        if True:
+
+            for line_name, line_value in lines:
+
+                # ---------------------
+                # 🔴 상향 돌파 (시가 아래 → 종가 위)
+                # ---------------------
+                if o < line_value < c:
+
+                    band = self._find_band_with_name(line_value, lines)
+                    if not band:
+                        continue
+
                     up_name, up, dn_name, dn = band
-                    self.enter_short(time_c, up, dn, line_name, line_value)
-                    return
+
+                    if not has_pos:
+                        self.enter_long(time_c, up, dn, line_name, line_value)
+                        return
+
+                    if has_pos and is_short:
+                        self.exit_position(c, "SWITCH_BREAK", line_name, line_value)
+                        self.enter_long(time_c, up, dn, line_name, line_value)
+                        return
+
+                # ---------------------
+                # 🔵 하향 돌파 (시가 위 → 종가 아래)
+                # ---------------------
+                if o > line_value > c:
+
+                    band = self._find_band_with_name(line_value, lines)
+                    if not band:
+                        continue
+
+                    up_name, up, dn_name, dn = band
+
+                    if not has_pos:
+                        self.enter_short(time_c, up, dn, line_name, line_value)
+                        return
+
+                    if has_pos and is_long:
+                        self.exit_position(c, "SWITCH_BREAK", line_name, line_value)
+                        self.enter_short(time_c, up, dn, line_name, line_value)
+                        return
 
         # =========================
         # 스위칭
@@ -482,6 +527,10 @@ class RlAdmin1:
             prev_c = float(prev["price_c"])
 
             for line_name, line_value in lines:
+
+                # 🔥 돌파 봉이면 회기 스킵
+                if o < line_value < c or o > line_value > c:
+                    continue
 
                 # ---------------------
                 # 1️⃣ 터치 조건 (핵심)
@@ -533,22 +582,6 @@ class RlAdmin1:
                         self.exit_position(prev_c, "SWITCH_REVERSE", line_name, line_value)
                         self.enter_short(time_c, up, dn, line_name, line_value)
                         return
-
-        # =========================
-        # 기존 돌파 진입
-        # =========================
-        if not has_pos and self.exit_candle_time != v.df.iloc[-1]["time"]:
-            band = self._find_band_with_name(o, lines)
-            if band:
-                up_name, up, dn_name, dn = band
-
-                if c > up:
-                    self.enter_long(time_c, up, dn, up_name, up)
-                    return
-
-                if c < dn:
-                    self.enter_short(time_c, up, dn, dn_name, dn)
-                    return
 
         # =========================
         # 마지막 상태 저장
