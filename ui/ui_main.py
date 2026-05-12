@@ -27,8 +27,10 @@ class UiMain(QMainWindow):
         self.set_table_non_editable(self.table_tw)
         self.set_table_non_editable(self.table_tw_1)
 
+        self.buy_cnt_cb.clear()
+        self.buy_cnt_cb_1.clear()
         time3 = [""]
-        for i in range(1, 15):
+        for i in range(1, 900):
             # value = i * 3
             time3.append(str(i))
         self.buy_cnt_cb.addItems(time3)
