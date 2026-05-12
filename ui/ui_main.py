@@ -29,8 +29,8 @@ class UiMain(QMainWindow):
 
         time3 = [""]
         for i in range(1, 15):
-            value = i * 3
-            time3.append(str(value))
+            # value = i * 3
+            time3.append(str(i))
         self.buy_cnt_cb.addItems(time3)
         self.buy_cnt_cb_1.addItems(time3)
 
